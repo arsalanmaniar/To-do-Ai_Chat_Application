@@ -55,10 +55,14 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
       // Call the backend API
       const response = await chatWithAI(message);
 
+      // Safely extract the reply from response
+      // The API client interceptor returns response.data directly
+      const replyText = response?.reply || response?.data?.reply || "Sorry, I couldn't process that message.";
+
       // Add AI response
       const aiMessage: Message = {
         id: Date.now().toString(),
-        text: response.reply,
+        text: replyText,
         isUser: false,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
