@@ -54,6 +54,8 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
     try {
       // Call the backend API
       console.log('Sending message to API:', message);
+      console.log('API URL:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
+
       const response = await chatWithAI(message);
 
       // Debug: log the full response to understand its structure
@@ -71,6 +73,16 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
         console.log('Response has reply?', false);
         console.log('Response structure:', response);
         console.log('Response might be an error or unauthorized');
+
+        // Try to find reply in different possible locations
+        if (response && typeof response === 'object') {
+          if (response.data && typeof response.data === 'object' && 'reply' in response.data) {
+            // This shouldn't happen if the fix is working, but as fallback
+            replyText = response.data.reply;
+          } else if ('reply' in response) {
+            replyText = response.reply;
+          }
+        }
       }
 
       // Add AI response
@@ -92,7 +104,7 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
       });
 
       // Check if it's an authentication error
-      if (error.response?.status === 401 || error.message.includes('401')) {
+      if (error.response?.status === 401 || error.message?.includes('401')) {
         // Add authentication error message
         const errorMessage: Message = {
           id: Date.now().toString(),
