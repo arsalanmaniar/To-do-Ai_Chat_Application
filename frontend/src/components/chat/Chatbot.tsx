@@ -58,12 +58,18 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
       // Debug: log the full response to understand its structure
       console.log('Full response from API:', response);
       console.log('Type of response:', typeof response);
-      console.log('Response has reply?', 'reply' in response);
-      console.log('Reply value:', response?.reply);
 
-      // Extract the reply from response
-      // The API client interceptor returns response.data directly
-      const replyText = response?.reply || "Sorry, I couldn't process that message.";
+      // Check if response is defined before checking for reply property
+      let replyText = "Sorry, I couldn't process that message.";
+
+      if (response && typeof response === 'object' && 'reply' in response) {
+        console.log('Response has reply?', true);
+        console.log('Reply value:', response.reply);
+        replyText = response.reply || replyText;
+      } else {
+        console.log('Response has reply?', false);
+        console.log('Response structure:', response);
+      }
 
       // Add AI response
       const aiMessage: Message = {
