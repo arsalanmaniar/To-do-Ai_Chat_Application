@@ -53,6 +53,7 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
 
     try {
       // Call the backend API
+      console.log('Sending message to API:', message);
       const response = await chatWithAI(message);
 
       // Debug: log the full response to understand its structure
@@ -69,6 +70,7 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
       } else {
         console.log('Response has reply?', false);
         console.log('Response structure:', response);
+        console.log('Response might be an error or unauthorized');
       }
 
       // Add AI response
@@ -80,18 +82,37 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
       };
 
       setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending message:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data
+      });
 
-      // Add error message
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        text: 'Sorry, I encountered an error. Please try again.',
-        isUser: false,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
+      // Check if it's an authentication error
+      if (error.response?.status === 401 || error.message.includes('401')) {
+        // Add authentication error message
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          text: 'Please log in to use the chat feature.',
+          isUser: false,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
 
-      setMessages(prev => [...prev, errorMessage]);
+        setMessages(prev => [...prev, errorMessage]);
+      } else {
+        // Add general error message
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          text: 'Sorry, I encountered an error. Please try again.',
+          isUser: false,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+
+        setMessages(prev => [...prev, errorMessage]);
+      }
     } finally {
       setIsLoading(false);
     }
